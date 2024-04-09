@@ -1,0 +1,37 @@
+.bar {
+  cursor: pointer;
+}
+
+.addButton {
+  background-color: #04aa6d;
+  border: none;
+  color: white;
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin-right: 10px;
+}
+
+.resetButton {
+  background-color: gray;
+  border: none;
+  color: white;
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+}
+
+.custom-select {
+  position: relative;
+  font-family: Arial;
+  margin-bottom: 25px;
+  width: 200px;
+}
+
+.custom-select select {
+  display: none;
+}

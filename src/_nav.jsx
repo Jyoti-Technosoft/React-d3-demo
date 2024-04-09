@@ -21,19 +21,19 @@ const _nav = [
   //   to: "/chart",
   //   icon: <img src={charticon} width="22px" className="ms-2 me-3"></img>,
   // },
-  {
-    component: CNavGroup,
-    name: "Charts",
-    to: "/charts",
-    icon: <img src={charticon} width="22px" className="ms-2 me-3"></img>,
-    items: [
-      {
-        component: CNavItem,
-        name: "Stacked Chart",
-        to: "/charts/stackedchart",
-      }
-    ],
-  },
+  // {
+  //   component: CNavGroup,
+  //   name: "Charts",
+  //   to: "/charts",
+  //   icon: <img src={charticon} width="22px" className="ms-2 me-3"></img>,
+  //   items: [
+  //     {
+  //       component: CNavItem,
+  //       name: "Stacked Chart",
+  //       to: "/charts/stackedchart",
+  //     }
+  //   ],
+  // },
   {
     component: CNavItem,
     name: "About Us",

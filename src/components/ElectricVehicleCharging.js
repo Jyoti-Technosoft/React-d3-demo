@@ -1,6 +1,8 @@
 import React, { useRef, useEffect, useState } from "react";
 import * as d3 from "d3";
 
+import "./ElectricVehicleCharging.css";
+
 const ElectricVehicleCharging = () => {
   const data = [
     {
@@ -18,7 +20,7 @@ const ElectricVehicleCharging = () => {
       total: 80,
       duration: "13h",
       used: 40,
-      standby: 5,
+      standby: 0,
       remainingBattery: 35,
     },
     {
@@ -67,16 +69,170 @@ const ElectricVehicleCharging = () => {
       remainingBattery: 30,
     },
   ];
-
   const svgRef = useRef();
+  const areaSvgRef = useRef();
   const [filteredData, setFilteredData] = useState(data);
   const [selectedOption, setSelectedOption] = useState("");
+  const [selectedData, setSelectedData] = useState(null);
   const options = ["monthly", "weekly", "daily"];
+  const initialState = [[
+    { date: new Date('2024-04-08T08:00:00'), state: 'discharging', batteryPercent: 80 },
+    { date: new Date('2024-04-08T09:00:00'), state: 'discharging', batteryPercent: 75 },
+    { date: new Date('2024-04-08T10:00:00'), state: 'discharging', batteryPercent: 70 },
+    { date: new Date('2024-04-08T11:00:00'), state: 'discharging', batteryPercent: 70 },
+    { date: new Date('2024-04-08T11:00:00'), state: 'charging', batteryPercent: 70 }, // Start charging at 11 AM
+    { date: new Date('2024-04-08T12:00:00'), state: 'charging', batteryPercent: 80 },
+    { date: new Date('2024-04-08T13:00:00'), state: 'charging', batteryPercent: 90 },
+    { date: new Date('2024-04-08T13:00:00'), state: 'discharging', batteryPercent: 90 },
+    { date: new Date('2024-04-08T14:00:00'), state: 'discharging', batteryPercent: 85 }, // Stop charging at 2 PM
+    { date: new Date('2024-04-08T15:00:00'), state: 'discharging', batteryPercent: 80 },
+    { date: new Date('2024-04-08T16:00:00'), state: 'discharging', batteryPercent: 75 },
+    { date: new Date('2024-04-08T17:00:00'), state: 'discharging', batteryPercent: 70 },
+    { date: new Date('2024-04-08T18:00:00'), state: 'discharging', batteryPercent: 50 },
+    { date: new Date('2024-04-08T18:00:00'), state: 'charging', batteryPercent: 50 },
+    { date: new Date('2024-04-08T19:00:00'), state: 'charging', batteryPercent: 60 },
+    { date: new Date('2024-04-08T19:00:00'), state: 'discharging', batteryPercent: 60 },
+    { date: new Date('2024-04-08T20:00:00'), state: 'discharging', batteryPercent: 50 },
+    { date: new Date('2024-04-08T20:00:00'), state: 'charging', batteryPercent: 50 },
+    { date: new Date('2024-04-08T21:00:00'), state: 'charging', batteryPercent: 80 },
+    { date: new Date('2024-04-08T22:00:00'), state: 'charging', batteryPercent: 90 },
+    { date: new Date('2024-04-08T22:00:00'), state: 'discharging', batteryPercent: 90 },
+    { date: new Date('2024-04-08T22:00:00'), state: 'standby', batteryPercent: 90 },
+    { date: new Date('2024-04-08T23:00:00'), state: 'standby', batteryPercent: 87 },
+    { date: new Date('2024-04-09T00:00:00'), state: 'standby', batteryPercent: 85 },
+    { date: new Date('2024-04-09T00:00:00'), state: 'discharging', batteryPercent: 85 },
+    { date: new Date('2024-04-09T01:00:00'), state: 'discharging', batteryPercent: 80 },
+    { date: new Date('2024-04-09T02:00:00'), state: 'discharging', batteryPercent: 75 },
+    // { date: new Date('2024-04-10T02:00:00'), state: 'charging', batteryPercent: 75 },
+    // { date: new Date('2024-04-10T03:00:00'), state: 'charging', batteryPercent: 75 },
+  ], [
+    // { date: new Date('2024-04-08T08:00:00'), state: 'discharging', batteryPercent: 90 },
+    // { date: new Date('2024-04-08T09:00:00'), state: 'discharging', batteryPercent: 85 },
+    // { date: new Date('2024-04-08T10:00:00'), state: 'discharging', batteryPercent: 75 },
+    // { date: new Date('2024-04-08T11:00:00'), state: 'discharging', batteryPercent: 75 },
+    { date: new Date('2024-04-08T11:00:00'), state: 'charging', batteryPercent: 75 }, // Start charging at 11 AM
+    { date: new Date('2024-04-08T12:00:00'), state: 'charging', batteryPercent: 80 },
+    { date: new Date('2024-04-08T13:00:00'), state: 'charging', batteryPercent: 90 },
+    { date: new Date('2024-04-08T13:00:00'), state: 'discharging', batteryPercent: 90 },
+    { date: new Date('2024-04-08T14:00:00'), state: 'discharging', batteryPercent: 85 }, // Stop charging at 2 PM
+    { date: new Date('2024-04-08T15:00:00'), state: 'discharging', batteryPercent: 80 },
+    { date: new Date('2024-04-08T16:00:00'), state: 'discharging', batteryPercent: 75 },
+    { date: new Date('2024-04-08T17:00:00'), state: 'discharging', batteryPercent: 70 },
+    { date: new Date('2024-04-08T18:00:00'), state: 'discharging', batteryPercent: 50 },
+    { date: new Date('2024-04-08T18:00:00'), state: 'charging', batteryPercent: 50 },
+    { date: new Date('2024-04-08T19:00:00'), state: 'charging', batteryPercent: 60 },
+    { date: new Date('2024-04-08T19:00:00'), state: 'discharging', batteryPercent: 60 },
+    { date: new Date('2024-04-08T20:00:00'), state: 'discharging', batteryPercent: 50 },
+    { date: new Date('2024-04-08T20:00:00'), state: 'charging', batteryPercent: 50 },
+    { date: new Date('2024-04-08T21:00:00'), state: 'charging', batteryPercent: 80 },
+    { date: new Date('2024-04-08T22:00:00'), state: 'charging', batteryPercent: 90 },
+    { date: new Date('2024-04-08T22:00:00'), state: 'discharging', batteryPercent: 90 },
+    { date: new Date('2024-04-08T22:00:00'), state: 'standby', batteryPercent: 90 },
+    { date: new Date('2024-04-08T23:00:00'), state: 'standby', batteryPercent: 87 },
+    { date: new Date('2024-04-09T00:00:00'), state: 'standby', batteryPercent: 85 },
+    { date: new Date('2024-04-09T00:00:00'), state: 'discharging', batteryPercent: 85 },
+    { date: new Date('2024-04-09T01:00:00'), state: 'discharging', batteryPercent: 80 },
+    { date: new Date('2024-04-09T02:00:00'), state: 'discharging', batteryPercent: 75 },
+    // { date: new Date('2024-04-10T02:00:00'), state: 'charging', batteryPercent: 75 },
+    // { date: new Date('2024-04-10T03:00:00'), state: 'charging', batteryPercent: 75 },
+  ], [
+    { date: new Date('2024-04-08T08:00:00'), state: 'discharging', batteryPercent: 80 },
+    { date: new Date('2024-04-08T09:00:00'), state: 'discharging', batteryPercent: 75 },
+    { date: new Date('2024-04-08T10:00:00'), state: 'discharging', batteryPercent: 70 },
+    { date: new Date('2024-04-08T11:00:00'), state: 'discharging', batteryPercent: 70 },
+    { date: new Date('2024-04-08T11:00:00'), state: 'charging', batteryPercent: 70 }, // Start charging at 11 AM
+    { date: new Date('2024-04-08T12:00:00'), state: 'charging', batteryPercent: 80 },
+    { date: new Date('2024-04-08T13:00:00'), state: 'charging', batteryPercent: 90 },
+    { date: new Date('2024-04-08T13:00:00'), state: 'discharging', batteryPercent: 90 },
+    { date: new Date('2024-04-08T14:00:00'), state: 'discharging', batteryPercent: 85 }, // Stop charging at 2 PM
+    { date: new Date('2024-04-08T15:00:00'), state: 'discharging', batteryPercent: 80 },
+    { date: new Date('2024-04-08T16:00:00'), state: 'discharging', batteryPercent: 75 },
+    { date: new Date('2024-04-08T17:00:00'), state: 'discharging', batteryPercent: 70 },
+    { date: new Date('2024-04-08T18:00:00'), state: 'discharging', batteryPercent: 50 },
+    // { date: new Date('2024-04-08T18:00:00'), state: 'charging', batteryPercent: 50 },
+    // { date: new Date('2024-04-08T19:00:00'), state: 'charging', batteryPercent: 60 },
+    // { date: new Date('2024-04-08T19:00:00'), state: 'discharging', batteryPercent: 60 },
+    // { date: new Date('2024-04-08T20:00:00'), state: 'discharging', batteryPercent: 50 },
+    // { date: new Date('2024-04-08T20:00:00'), state: 'charging', batteryPercent: 50 },
+    // { date: new Date('2024-04-08T21:00:00'), state: 'charging', batteryPercent: 80 },
+    // { date: new Date('2024-04-08T22:00:00'), state: 'charging', batteryPercent: 90 },
+    // { date: new Date('2024-04-08T22:00:00'), state: 'discharging', batteryPercent: 90 },
+    // { date: new Date('2024-04-08T22:00:00'), state: 'standby', batteryPercent: 90 },
+    // { date: new Date('2024-04-08T23:00:00'), state: 'standby', batteryPercent: 87 },
+    // { date: new Date('2024-04-09T00:00:00'), state: 'standby', batteryPercent: 85 },
+    // { date: new Date('2024-04-09T00:00:00'), state: 'discharging', batteryPercent: 85 },
+    // { date: new Date('2024-04-09T01:00:00'), state: 'discharging', batteryPercent: 80 },
+    // { date: new Date('2024-04-09T02:00:00'), state: 'discharging', batteryPercent: 75 },
+    // { date: new Date('2024-04-10T02:00:00'), state: 'charging', batteryPercent: 75 },
+    // { date: new Date('2024-04-10T03:00:00'), state: 'charging', batteryPercent: 75 },
+  ], [
+    { date: new Date('2024-04-08T08:00:00'), state: 'discharging', batteryPercent: 80 },
+    { date: new Date('2024-04-08T09:00:00'), state: 'discharging', batteryPercent: 75 },
+    { date: new Date('2024-04-08T10:00:00'), state: 'discharging', batteryPercent: 70 },
+    { date: new Date('2024-04-08T11:00:00'), state: 'discharging', batteryPercent: 70 },
+    { date: new Date('2024-04-08T11:00:00'), state: 'charging', batteryPercent: 70 }, // Start charging at 11 AM
+    { date: new Date('2024-04-08T12:00:00'), state: 'charging', batteryPercent: 80 },
+    { date: new Date('2024-04-08T13:00:00'), state: 'charging', batteryPercent: 90 },
+    { date: new Date('2024-04-08T13:00:00'), state: 'discharging', batteryPercent: 90 },
+    { date: new Date('2024-04-08T14:00:00'), state: 'discharging', batteryPercent: 85 }, // Stop charging at 2 PM
+    { date: new Date('2024-04-08T15:00:00'), state: 'discharging', batteryPercent: 80 },
+    { date: new Date('2024-04-08T16:00:00'), state: 'discharging', batteryPercent: 75 },
+    { date: new Date('2024-04-08T17:00:00'), state: 'discharging', batteryPercent: 70 },
+    { date: new Date('2024-04-08T18:00:00'), state: 'discharging', batteryPercent: 50 },
+    { date: new Date('2024-04-08T18:00:00'), state: 'charging', batteryPercent: 50 },
+    { date: new Date('2024-04-08T19:00:00'), state: 'charging', batteryPercent: 60 },
+    { date: new Date('2024-04-08T19:00:00'), state: 'discharging', batteryPercent: 60 },
+    { date: new Date('2024-04-08T20:00:00'), state: 'discharging', batteryPercent: 50 },
+    { date: new Date('2024-04-08T20:00:00'), state: 'charging', batteryPercent: 50 },
+    { date: new Date('2024-04-08T21:00:00'), state: 'charging', batteryPercent: 80 },
+    { date: new Date('2024-04-08T22:00:00'), state: 'charging', batteryPercent: 90 },
+    { date: new Date('2024-04-08T22:00:00'), state: 'discharging', batteryPercent: 90 },
+    { date: new Date('2024-04-08T22:00:00'), state: 'standby', batteryPercent: 90 },
+    { date: new Date('2024-04-08T23:00:00'), state: 'standby', batteryPercent: 87 },
+    { date: new Date('2024-04-09T00:00:00'), state: 'standby', batteryPercent: 85 },
+    { date: new Date('2024-04-09T00:00:00'), state: 'discharging', batteryPercent: 85 },
+    { date: new Date('2024-04-09T01:00:00'), state: 'discharging', batteryPercent: 80 },
+    { date: new Date('2024-04-09T02:00:00'), state: 'discharging', batteryPercent: 75 },
+    // { date: new Date('2024-04-10T02:00:00'), state: 'charging', batteryPercent: 75 },
+    // { date: new Date('2024-04-10T03:00:00'), state: 'charging', batteryPercent: 75 },
+  ], [
+    { date: new Date('2024-04-08T08:00:00'), state: 'discharging', batteryPercent: 80 },
+    { date: new Date('2024-04-08T09:00:00'), state: 'discharging', batteryPercent: 75 },
+    { date: new Date('2024-04-08T10:00:00'), state: 'discharging', batteryPercent: 70 },
+    { date: new Date('2024-04-08T11:00:00'), state: 'discharging', batteryPercent: 70 },
+    { date: new Date('2024-04-08T11:00:00'), state: 'charging', batteryPercent: 70 }, // Start charging at 11 AM
+    { date: new Date('2024-04-08T12:00:00'), state: 'charging', batteryPercent: 80 },
+    { date: new Date('2024-04-08T13:00:00'), state: 'charging', batteryPercent: 90 },
+    { date: new Date('2024-04-08T13:00:00'), state: 'discharging', batteryPercent: 90 },
+    { date: new Date('2024-04-08T14:00:00'), state: 'discharging', batteryPercent: 85 }, // Stop charging at 2 PM
+    { date: new Date('2024-04-08T15:00:00'), state: 'discharging', batteryPercent: 80 },
+    { date: new Date('2024-04-08T16:00:00'), state: 'discharging', batteryPercent: 75 },
+    { date: new Date('2024-04-08T17:00:00'), state: 'discharging', batteryPercent: 70 },
+    { date: new Date('2024-04-08T18:00:00'), state: 'discharging', batteryPercent: 50 },
+    { date: new Date('2024-04-08T18:00:00'), state: 'charging', batteryPercent: 50 },
+    { date: new Date('2024-04-08T19:00:00'), state: 'charging', batteryPercent: 60 },
+    { date: new Date('2024-04-08T19:00:00'), state: 'discharging', batteryPercent: 60 },
+    { date: new Date('2024-04-08T20:00:00'), state: 'discharging', batteryPercent: 50 },
+    { date: new Date('2024-04-08T20:00:00'), state: 'charging', batteryPercent: 50 },
+    { date: new Date('2024-04-08T21:00:00'), state: 'charging', batteryPercent: 80 },
+    { date: new Date('2024-04-08T22:00:00'), state: 'charging', batteryPercent: 90 },
+    { date: new Date('2024-04-08T22:00:00'), state: 'discharging', batteryPercent: 90 },
+    { date: new Date('2024-04-08T22:00:00'), state: 'standby', batteryPercent: 90 },
+    { date: new Date('2024-04-08T23:00:00'), state: 'standby', batteryPercent: 87 },
+    { date: new Date('2024-04-09T00:00:00'), state: 'standby', batteryPercent: 85 },
+    { date: new Date('2024-04-09T00:00:00'), state: 'discharging', batteryPercent: 85 },
+    { date: new Date('2024-04-09T01:00:00'), state: 'discharging', batteryPercent: 80 },
+    { date: new Date('2024-04-09T02:00:00'), state: 'discharging', batteryPercent: 75 },
+    // { date: new Date('2024-04-10T02:00:00'), state: 'charging', batteryPercent: 75 },
+    // { date: new Date('2024-04-10T03:00:00'), state: 'charging', batteryPercent: 75 },
+  ]];
+  const [lastAddedData, setLastAddedData] = useState(null);
+  const [rawData, setRawData] = useState(initialState[0]);
 
   useEffect(() => {
     const svg = d3.select(svgRef.current);
-    // Clear the previous graph
-    svg.selectAll("*").remove();
+   
+    d3.select(svgRef.current).selectAll("*").remove() // Clear the previous graph
 
     // Set up dimensions and margins
     const margin = { top: 20, right: 30, bottom: 30, left: 40 };
@@ -129,7 +285,30 @@ const ElectricVehicleCharging = () => {
       .attr("x", (d) => x(d.data.date))
       .attr("y", (d) => y(d[1]))
       .attr("height", (d) => y(d[0]) - y(d[1]))
-      .attr("width", x.bandwidth());
+      .attr("width", x.bandwidth())
+      .attr("class", "bar")
+      .on("click", (event, d) => {
+        const randomIndex = Math.floor(Math.random() * 5);
+        setSelectedData(d.data);
+        setRawData(initialState[randomIndex]);
+      });
+
+      svg
+      .append("g")
+      .attr("transform", `translate(${margin.left},0)`)
+      .call(d3.axisLeft(y))
+      .append("text")
+      .attr("x", -margin.left)
+      .attr("y", 10)
+      .attr("fill", "currentColor")
+      // .attr("text-anchor", "start")
+      // .text("Battery Usage");
+
+    svg
+      .append("text")
+      .attr("transform", `translate(${width / 2}, ${height + margin.top + 50})`) // Positioning x-axis label
+      .style("text-anchor", "middle")
+      .text("Date");
 
     // Draw x-axis
     g.append("g")
@@ -163,7 +342,100 @@ const ElectricVehicleCharging = () => {
       .attr("x", 15)
       .attr("y", (d, i) => i * 20 + 9)
       .text((d) => d);
-  }, [data]);
+
+    // Detailed area chart
+    // if (selectedData) {
+      d3.select(areaSvgRef.current).selectAll("*").remove();
+
+      const areaSvg = d3
+        .select(areaSvgRef.current)
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+      
+        d3.select(areaSvg.current).selectAll("*").remove()  // Clear the previous graph
+
+      const randomIndex = Math.floor(Math.random() * rawData.length);
+      console.log("randomIndex", randomIndex);
+
+      let currentData = rawData[0];
+      let paths = [];
+      let pathData = [[]]; // Initialize pathData as an array of arrays
+
+      for (let i = 0; i < rawData.length; i++) {
+        if (rawData[i].state !== currentData.state) {
+          paths.push(currentData.state);
+          pathData.push([rawData[i]]);
+          currentData = rawData[i];
+        } else {
+          pathData[pathData.length - 1].push(rawData[i]);
+        }
+      }
+
+      paths.push(currentData.state);
+
+      // Create time and linear scales
+      const xScale = d3
+        .scaleTime()
+        .domain(d3.extent(rawData, (d) => d.date))
+        .range([0, width]);
+      const yScale = d3.scaleLinear().domain([0, 100]).range([height, 0]);
+
+      // Define area functions for driving and charging
+      const areaDriving = d3
+        .area()
+        .x((d) => xScale(d.date))
+        .y0(height)
+        .y1((d) => yScale(d.batteryPercent));
+
+      const areaCharging = d3
+        .area()
+        .x((d) => xScale(d.date))
+        .y0(height)
+        .y1((d) => yScale(d.batteryPercent));
+
+        pathData.forEach((data, index) => {
+          const path = areaSvg
+            .append("path")
+            .datum(data)
+            .attr("fill", paths[index] === "discharging" ? "#77C3EC" : paths[index] === "charging" ? "#B8E2F2" : "#5388a5")
+            .attr("opacity", 0.5)
+            .attr(
+              "d",
+              paths[index] === "discharging" ? areaDriving : areaCharging
+            )
+            .on("mousemove", function (event) {
+              const xPos = d3.pointer(event)[0];
+              const dateAtX = xScale.invert(xPos);
+
+              // Find the data point closest to the x position
+              const bisectDate = d3.bisector((d) => d.date).left;
+              const i = bisectDate(data, dateAtX, 1);
+              const d0 = data[i - 1];
+              const d1 = data[i];
+              const d = dateAtX - d0.date > d1.date - dateAtX ? d1 : d0;
+
+              d3.select(this)
+                .select("title")
+                .text(`${d.state}: ${Math.round(d.batteryPercent)}%`);
+            })
+            .on("mouseout", function () {
+              d3.select(this).select("title").text("");
+            })
+            .append("title");
+        });
+
+      // Add X axis
+      areaSvg
+        .append("g")
+        .attr("transform", `translate(0, ${height})`)
+        .call(d3.axisBottom(xScale));
+
+      // Add Y axis
+      areaSvg.append("g").call(d3.axisLeft(yScale));
+    // }
+  }, [filteredData, rawData, selectedData]);
 
   const handleFilter = (option) => {
     setSelectedOption(option);
@@ -215,19 +487,60 @@ const ElectricVehicleCharging = () => {
     setFilteredData(filtered);
   };
 
+  const addData = () => {
+    let rawDataCopy = [...rawData];
+    let data = rawDataCopy[rawDataCopy.length - 1];
+    let lastDate = new Date(data.date);
+    if (lastAddedData !== null) {
+      if (lastAddedData === "discharging") {
+        rawDataCopy.push(
+         { date: new Date(lastDate), state: 'charging', batteryPercent: data.batteryPercent });
+         rawDataCopy.push({ date: new Date(lastDate.setHours(lastDate.getHours() + 1)), state: 'charging', batteryPercent: data.batteryPercent + 5 });         setLastAddedData('charging');
+        } else {
+          rawDataCopy.push({
+            date: new Date(lastDate),
+            state: 'discharging',
+            batteryPercent: data.batteryPercent
+          });
+          rawDataCopy.push({
+            date: new Date(lastDate.setHours(lastDate.getHours() + 1)),
+            state: 'discharging',
+            batteryPercent: data.batteryPercent - 5
+          });
+          setLastAddedData('discharging');
+        }
+    } else {
+      rawDataCopy.push({
+        date: new Date(lastDate.setHours(lastDate.getHours() + 1)),
+        state: 'discharging',
+        batteryPercent: data.batteryPercent - 5
+      });
+      setLastAddedData('discharging');
+    }
+    setRawData(rawDataCopy);
+  }
+
   return (
     <div>
       <select
+        class="custom-select" 
         value={selectedOption}
         onChange={(e) => handleFilter(e.target.value)}
+        style={{  }}
       >
+        <option selected={true}>Select All</option>
         {options.map((option) => (
           <option key={option} value={option}>
             {option}
           </option>
         ))}
       </select>
+      
       <svg ref={svgRef} width={"100%"} height={500}></svg>
+      <svg ref={areaSvgRef} width={"100%"} height={500}></svg>
+
+      <button className="addButton" onClick={() => addData()}>Add Data</button>
+      <button className="resetButton" onClick={() => setRawData(initialState)}>Reset</button>
     </div>
   );
 };
