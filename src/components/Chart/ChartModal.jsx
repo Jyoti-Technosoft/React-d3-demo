@@ -137,7 +137,7 @@ export function CrudStackedChartModal(props) {
         style={{ height: "inherit" }}
       >
         <div className="header-crud w-100 d-flex justify-content-between">
-          <h4>Oil Consumption By Country (In Barrels)</h4>
+          <h4>Stacked Chart</h4>
           <img src={closeIcon} role="button" onClick={closeBtn}  alt="" />
         </div>
         <div className="w-100 body-crud my-2">

@@ -283,7 +283,7 @@ function StackedChart({ chartId, parentWidth, parentHeight, isModal, tooltipShow
     <>
       {
         isModal ?
-          <h5 className="text-center">Oil Consumption By Country (In Barrels)</h5>
+          <h5 className="text-center">Stacked Chart</h5>
           : null
       }
       <div
