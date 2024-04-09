@@ -540,7 +540,7 @@ const ElectricVehicleCharging = () => {
       <svg ref={areaSvgRef} width={"100%"} height={500}></svg>
 
       <button className="addButton" onClick={() => addData()}>Add Data</button>
-      <button className="resetButton" onClick={() => setRawData(initialState)}>Reset</button>
+      <button className="resetButton" onClick={() => setRawData(initialState[0])}>Reset</button>
     </div>
   );
 };
