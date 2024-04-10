@@ -15,15 +15,6 @@ const ElectricVehicleCharging = () => {
       remainingBattery: 10,
     },
     {
-      date: "2024-03-01",
-      charge: "7:00 PM",
-      total: 80,
-      duration: "13h",
-      used: 40,
-      standby: 0,
-      remainingBattery: 35,
-    },
-    {
       date: "2024-04-01",
       charge: "7:15 AM",
       total: 100,
@@ -31,15 +22,6 @@ const ElectricVehicleCharging = () => {
       used: 70,
       standby: 10,
       remainingBattery: 20,
-    },
-    {
-      date: "2024-04-01",
-      charge: "9:00 PM",
-      total: 100,
-      duration: "11h 15m",
-      used: 40,
-      standby: 5,
-      remainingBattery: 55,
     },
     {
       date: "2024-04-02",
@@ -64,7 +46,7 @@ const ElectricVehicleCharging = () => {
       charge: "9:00 PM",
       total: 90,
       duration: "12h",
-      used: 50,
+      used: 55,
       standby: 5,
       remainingBattery: 30,
     },
@@ -228,17 +210,18 @@ const ElectricVehicleCharging = () => {
   ]];
   const [lastAddedData, setLastAddedData] = useState(null);
   const [rawData, setRawData] = useState(initialState[0]);
+  const [windowSize,setWindowSize] = useState('100%')
 
   useEffect(() => {
+    const updateWidth = () => {
     const svg = d3.select(svgRef.current);
-   
+
     d3.select(svgRef.current).selectAll("*").remove() // Clear the previous graph
-
+    setWindowSize(((window.innerWidth*2)/3) + 10)
     // Set up dimensions and margins
-    const margin = { top: 20, right: 30, bottom: 30, left: 40 };
-    const width = 600 - margin.left - margin.right;
+    const margin = { top: 0, right: 30, bottom: 30, left: 60 };
+    const width = window.innerWidth - margin.left - margin.right - (window.innerWidth/3) ;
     const height = 400 - margin.top - margin.bottom;
-
     // Append a group element to SVG
     const g = svg
       .append("g")
@@ -252,7 +235,7 @@ const ElectricVehicleCharging = () => {
 
     const y = d3
       .scaleLinear()
-      .domain([0, d3.max(filteredData, (d) => d.total)])
+      .domain([0, d3.max(filteredData, (d) => d.total) + 5])
       .range([height, 0]);
 
     const stackKeys = ["used", "standby", "remainingBattery"];
@@ -293,20 +276,24 @@ const ElectricVehicleCharging = () => {
         setRawData(initialState[randomIndex]);
       });
 
-      svg
+    svg
       .append("g")
       .attr("transform", `translate(${margin.left},0)`)
       .call(d3.axisLeft(y))
       .append("text")
-      .attr("x", -margin.left)
-      .attr("y", 10)
+      .attr("x", -margin.left - 130)
+      .attr("y", -40)
       .attr("fill", "currentColor")
-      // .attr("text-anchor", "start")
-      // .text("Battery Usage");
+      .attr("text-anchor", "middle")
+      .attr("transform", "rotate(-90)")
+      .style("font-size", "16px")
+      .text("Battery Usage");
+
+
 
     svg
       .append("text")
-      .attr("transform", `translate(${width / 2}, ${height + margin.top + 50})`) // Positioning x-axis label
+      .attr("transform", `translate(${(width / 2) + 60}, ${height + margin.top + 50})`) // Positioning x-axis label
       .style("text-anchor", "middle")
       .text("Date");
 
@@ -322,7 +309,7 @@ const ElectricVehicleCharging = () => {
       .append("g")
       .attr(
         "transform",
-        `translate(${width - margin.right + 100}, ${margin.top})`
+        `translate(${width - margin.right + 100}, ${margin.top + 10})`
       );
 
     legend
@@ -345,96 +332,152 @@ const ElectricVehicleCharging = () => {
 
     // Detailed area chart
     // if (selectedData) {
-      d3.select(areaSvgRef.current).selectAll("*").remove();
+    d3.select(areaSvgRef.current).selectAll("*").remove();
+    const areaSvg = d3
+      .select(areaSvgRef.current)
+      .attr("width", width + margin.left + margin.right + 200)
+      .attr("height", height + margin.top + margin.bottom + 50)
+      .append("g")
+      .attr("transform", `translate(${margin.left},${margin.top})`);
 
-      const areaSvg = d3
-        .select(areaSvgRef.current)
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom)
-        .append("g")
-        .attr("transform", `translate(${margin.left},${margin.top})`);
-      
-        d3.select(areaSvg.current).selectAll("*").remove()  // Clear the previous graph
+    d3.select(areaSvg.current).selectAll("*").remove()  // Clear the previous graph
 
-      const randomIndex = Math.floor(Math.random() * rawData.length);
-      console.log("randomIndex", randomIndex);
+    const randomIndex = Math.floor(Math.random() * rawData.length);
 
-      let currentData = rawData[0];
-      let paths = [];
-      let pathData = [[]]; // Initialize pathData as an array of arrays
+    let currentData = rawData[0];
+    let paths = [];
+    let pathData = [[]]; // Initialize pathData as an array of arrays
 
-      for (let i = 0; i < rawData.length; i++) {
-        if (rawData[i].state !== currentData.state) {
-          paths.push(currentData.state);
-          pathData.push([rawData[i]]);
-          currentData = rawData[i];
-        } else {
-          pathData[pathData.length - 1].push(rawData[i]);
-        }
+    for (let i = 0; i < rawData.length; i++) {
+      if (rawData[i].state !== currentData.state) {
+        paths.push(currentData.state);
+        pathData.push([rawData[i]]);
+        currentData = rawData[i];
+      } else {
+        pathData[pathData.length - 1].push(rawData[i]);
       }
+    }
 
-      paths.push(currentData.state);
+    paths.push(currentData.state);
 
-      // Create time and linear scales
-      const xScale = d3
-        .scaleTime()
-        .domain(d3.extent(rawData, (d) => d.date))
-        .range([0, width]);
-      const yScale = d3.scaleLinear().domain([0, 100]).range([height, 0]);
+    // Create time and linear scales
+    const xScale = d3
+      .scaleTime()
+      .domain(d3.extent(rawData, (d) => d.date))
+      .range([0, width]);
+    const yScale = d3.scaleLinear().domain([0, 105]).range([height, 0]);
 
-      // Define area functions for driving and charging
-      const areaDriving = d3
-        .area()
-        .x((d) => xScale(d.date))
-        .y0(height)
-        .y1((d) => yScale(d.batteryPercent));
+    // Define area functions for driving and charging
+    const areaDriving = d3
+      .area()
+      .x((d) => xScale(d.date))
+      .y0(height)
+      .y1((d) => yScale(d.batteryPercent));
 
-      const areaCharging = d3
-        .area()
-        .x((d) => xScale(d.date))
-        .y0(height)
-        .y1((d) => yScale(d.batteryPercent));
+    const areaCharging = d3
+      .area()
+      .x((d) => xScale(d.date))
+      .y0(height)
+      .y1((d) => yScale(d.batteryPercent));
+    
+    areaSvg
+      .append("text")
+      .attr("transform", `translate(${width / 2}, ${height + margin.top + 50})`) // Positioning x-axis label
+      .style("text-anchor", "middle")
+      .text("Time");
 
-        pathData.forEach((data, index) => {
-          const path = areaSvg
-            .append("path")
-            .datum(data)
-            .attr("fill", paths[index] === "discharging" ? "#77C3EC" : paths[index] === "charging" ? "#B8E2F2" : "#5388a5")
-            .attr("opacity", 0.5)
-            .attr(
-              "d",
-              paths[index] === "discharging" ? areaDriving : areaCharging
-            )
-            .on("mousemove", function (event) {
-              const xPos = d3.pointer(event)[0];
-              const dateAtX = xScale.invert(xPos);
-
-              // Find the data point closest to the x position
-              const bisectDate = d3.bisector((d) => d.date).left;
-              const i = bisectDate(data, dateAtX, 1);
-              const d0 = data[i - 1];
-              const d1 = data[i];
-              const d = dateAtX - d0.date > d1.date - dateAtX ? d1 : d0;
-
-              d3.select(this)
-                .select("title")
-                .text(`${d.state}: ${Math.round(d.batteryPercent)}%`);
-            })
-            .on("mouseout", function () {
-              d3.select(this).select("title").text("");
-            })
-            .append("title");
-        });
-
-      // Add X axis
       areaSvg
-        .append("g")
-        .attr("transform", `translate(0, ${height})`)
-        .call(d3.axisBottom(xScale));
+      .append("text")
+      .attr("transform", "rotate(-90)")  // Rotate the y-axis label
+      .attr("y", 0 - margin.left)  // Positioning y-axis label
+      .attr("x", 0 - height / 2)
+      .attr("dy", "1em")
+      .style("text-anchor", "middle")
+      .text("Battery Percent");
 
-      // Add Y axis
-      areaSvg.append("g").call(d3.axisLeft(yScale));
-    // }
+    pathData.forEach((data, index) => {
+      const path = areaSvg
+        .append("path")
+        .datum(data)
+        .attr("fill", paths[index] === "discharging" ? "#77C3EC" : paths[index] === "charging" ? "#B8E2F2" : "#5388a5")
+        .attr("opacity", 0.5)
+        .attr(
+          "d",
+          paths[index] === "discharging" ? areaDriving : areaCharging
+        )
+        .on("mousemove", function (event) {
+          const xPos = d3.pointer(event)[0];
+          const dateAtX = xScale.invert(xPos);
+
+          // Find the data point closest to the x position
+          const bisectDate = d3.bisector((d) => d.date).left;
+          const i = bisectDate(data, dateAtX, 1);
+          const d0 = data[i - 1];
+          const d1 = data[i];
+          const d = dateAtX - d0.date > d1.date - dateAtX ? d1 : d0;
+
+          d3.select(this)
+            .select("title")
+            .text(`${d.state}: ${Math.round(d.batteryPercent)}%`);
+        })
+        .on("mouseout", function () {
+          d3.select(this).select("title").text("");
+        })
+        .append("title");
+    });
+
+    // Add X axis
+    areaSvg
+      .append("g")
+      .attr("transform", `translate(0, ${height})`)
+      .call(d3.axisBottom(xScale));
+
+    // Add Y axis
+    areaSvg.append("g").call(d3.axisLeft(yScale));
+    const legendData = [
+      { state: "charging", color: "#B8E2F2" },
+      { state: "standby", color: "#5388a5" },
+      { state: "discharging", color: "#77C3EC" },
+    ];
+
+    const legend2 = areaSvg
+      .append("g")
+      .attr("transform", `translate(${width - margin.right + 70}, ${margin.top + 10})`); // Adjust the position of the legend
+
+    legend2
+      .selectAll("rect")
+      .data(legendData)
+      .enter()
+      .append("rect")
+      .attr("x", 0)
+      .attr("y", (d, i) => i * 20)
+      .attr("width", 10)
+      .attr("height", 10)
+      .attr("fill", (d) => d.color);
+
+    legend2
+      .selectAll("text")
+      .data(legendData)
+      .enter()
+      .append("text")
+      .attr("x", 15)
+      .attr("y", (d, i) => i * 20 + 9)
+      .text((d) => d.state)
+      .attr("fill", 'black');
+  }
+
+      updateWidth();
+
+      // Event listener for window resize
+      window.addEventListener('resize', updateWidth);
+
+      // Cleanup
+      return () => {
+          window.removeEventListener('resize', updateWidth);
+      };
+
+
+
   }, [filteredData, rawData, selectedData]);
 
   const handleFilter = (option) => {
@@ -463,11 +506,11 @@ const ElectricVehicleCharging = () => {
           return (
             entryDate >= startOfWeek &&
             entryDate <=
-              new Date(
-                startOfWeek.getFullYear(),
-                startOfWeek.getMonth(),
-                startOfWeek.getDate() + 6
-              )
+            new Date(
+              startOfWeek.getFullYear(),
+              startOfWeek.getMonth(),
+              startOfWeek.getDate() + 6
+            )
           );
         });
         break;
@@ -494,21 +537,21 @@ const ElectricVehicleCharging = () => {
     if (lastAddedData !== null) {
       if (lastAddedData === "discharging") {
         rawDataCopy.push(
-         { date: new Date(lastDate), state: 'charging', batteryPercent: data.batteryPercent });
-         rawDataCopy.push({ date: new Date(lastDate.setHours(lastDate.getHours() + 1)), state: 'charging', batteryPercent: data.batteryPercent + 5 });         setLastAddedData('charging');
-        } else {
-          rawDataCopy.push({
-            date: new Date(lastDate),
-            state: 'discharging',
-            batteryPercent: data.batteryPercent
-          });
-          rawDataCopy.push({
-            date: new Date(lastDate.setHours(lastDate.getHours() + 1)),
-            state: 'discharging',
-            batteryPercent: data.batteryPercent - 5
-          });
-          setLastAddedData('discharging');
-        }
+          { date: new Date(lastDate), state: 'charging', batteryPercent: data.batteryPercent });
+        rawDataCopy.push({ date: new Date(lastDate.setHours(lastDate.getHours() + 1)), state: 'charging', batteryPercent: data.batteryPercent + 5 }); setLastAddedData('charging');
+      } else {
+        rawDataCopy.push({
+          date: new Date(lastDate),
+          state: 'discharging',
+          batteryPercent: data.batteryPercent
+        });
+        rawDataCopy.push({
+          date: new Date(lastDate.setHours(lastDate.getHours() + 1)),
+          state: 'discharging',
+          batteryPercent: data.batteryPercent - 5
+        });
+        setLastAddedData('discharging');
+      }
     } else {
       rawDataCopy.push({
         date: new Date(lastDate.setHours(lastDate.getHours() + 1)),
@@ -522,25 +565,45 @@ const ElectricVehicleCharging = () => {
 
   return (
     <div>
-      <select
-        class="custom-select" 
-        value={selectedOption}
-        onChange={(e) => handleFilter(e.target.value)}
-        style={{  }}
-      >
-        <option selected={true}>Select All</option>
-        {options.map((option) => (
-          <option key={option} value={option}>
-            {option}
-          </option>
-        ))}
-      </select>
-      
+      <div style={{ display: "flex", justifyContent: "flex-end" }}>
+        <select
+          className="custom-select form-select"
+          value={selectedOption}
+          onChange={(e) => handleFilter(e.target.value)}
+          style={{ width: "200px" }}
+        >
+          <option selected={true}>Select All</option>
+          {options.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
+      </div>
       <svg ref={svgRef} width={"100%"} height={500}></svg>
-      <svg ref={areaSvgRef} width={"100%"} height={500}></svg>
 
-      <button className="addButton" onClick={() => addData()}>Add Data</button>
-      <button className="resetButton" onClick={() => setRawData(initialState[0])}>Reset</button>
+      <div style={{ display: "flex", position: "relative" }}>
+        <svg ref={areaSvgRef} width={"100%"} height={500}></svg>
+        <div
+          style={{
+            position: "absolute",
+            display: "flex",
+            flexDirection: "column",
+            marginTop: "200px",
+            left: windowSize,
+          }}
+        >
+          <button className="addButton" onClick={() => addData()}>
+            Add Data
+          </button>
+          <button
+            className="resetButton"
+            onClick={() => setRawData(initialState[0])}
+          >
+            Reset
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
